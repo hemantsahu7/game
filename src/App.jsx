@@ -17,7 +17,7 @@ const WEAPON_OFFSET = {
   z: 0.8,
 };
 
-const socket = io("https://game-server-smoky.vercel.app/", {
+const socket = io("https://game-server-smoky.vercel.app", {
   withCredentials: true,
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
