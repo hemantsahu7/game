@@ -124,6 +124,7 @@ function App() {
       id: uuidv4(), // Generate a unique ID
       playerId,
       position: bulletPosition,
+      starting: Date.now(),
       angle,
       timestamp: Date.now(),
     };
@@ -131,7 +132,19 @@ function App() {
     setBullets((prev) => [...prev, newBullet]);
     socket.emit("fireBullet", newBullet);
   };
+function triggerKey(key, isDown) {
+  const event = new KeyboardEvent(isDown ? 'keydown' : 'keyup', { key });
+  window.dispatchEvent(event);
+}
 
+function events(key) {
+  return {
+    onTouchStart: () => triggerKey(key, true),
+    onTouchEnd: () => triggerKey(key, false),
+    onMouseDown: () => triggerKey(key, true),
+    onMouseUp: () => triggerKey(key, false),
+  };
+}
   
 
   return (
@@ -146,10 +159,12 @@ function App() {
     </div>:
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
       <Canvas shadows camera={{ position: [0, 10, 30], fov: 30, near: 2 }} dpr={[1, 1.5]}>
+
         <ambientLight intensity={0.5} />
         <directionalLight position={[25, 18, -25]} intensity={0.3} />
         <Suspense>
-          <Physics gravity={[0, -9.82, 0]}>
+          <Physics gravity={[0, -9.82*2, 0]} >
+            
             <Map />
             {Object.entries(players).map(([id, state]) => (
               <CharacterControls
@@ -187,6 +202,27 @@ function App() {
         </Suspense>
         
       </Canvas>
+        <div className="mobile-controls">
+         <div className="movement-left">
+           <div className="row">
+             <button className="control-btn" {...events('w')}>W</button>
+           </div>
+          <div className="row">
+             <button className="control-btn" {...events('a')}>A</button>
+             <button className="control-btn" {...events('z')}>Z</button>
+             <button className="control-btn" {...events('d')}>D</button>
+          </div>
+          <div className="row">
+             <button className="control-btn" {...events('s')}>S</button>
+          </div>
+         </div>
+
+         <div className="movement-right">
+            <button className="control-btn" {...events('j')}>J</button>
+            <button className="control-btn" {...events('f')}>F</button>
+         </div>
+        </div>
+
     </div>
    }
    </>
@@ -195,7 +231,6 @@ function App() {
 
 
 export default App;
-
 
 
 
