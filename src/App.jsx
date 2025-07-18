@@ -33,7 +33,6 @@ function App() {
   const [firstlogin,setlogin] = useState(false);
   const [name,setname] = useState('');
   const [submit,setsubmit] = useState(false);
-
   useEffect(() => {
     socket.on("connect", () => {
       setPlayerId(socket.id);
@@ -69,6 +68,16 @@ function App() {
         return updated;
       });
     });
+    socket.on("animateHit",({id})=>{
+      
+      if(String(socket.id) === String(id)){
+        console.log(id);
+        decreasehealth(id);
+        oncollision();
+        endcollision();
+      }
+
+    });
 
     return () => {
       socket.off("connect");
@@ -78,16 +87,18 @@ function App() {
       socket.off("bulletFired");
       socket.off("updateBullets");
       socket.off("playerDisconnected");
+      socket.off("animateHit");
     };
   }, []);
 
-  function oncollision(){
+  function oncollision(id){
     sethit(true);
+    
   }
 
   function endcollision(){
     setTimeout(() => {
-      sethit(false); 
+      sethit(false);
     }, 1000);
   }
   function setloginfalse(){
@@ -100,7 +111,7 @@ function App() {
       if (updatedPlayers[id]?.health>=10) {
         updatedPlayers[id] = {
           ...updatedPlayers[id],
-          health: updatedPlayers[id].health - 10, // Decrease health by 10
+          health: updatedPlayers[id].health - 2, // Decrease health by 2
         };
       }
       if(updatedPlayers[id].health === 0){
@@ -110,7 +121,7 @@ function App() {
     });
   
     // Notify the server about the updated health for synchronization
-    socket.emit("updatePlayerHealth", { id, health: players[id]?.health - 10 });
+    //socket.emit("updatePlayerHealth", { id, health: players[id]?.health - 10 });
   }
 
   const fireBullet = (position, angle) => {
@@ -126,6 +137,7 @@ function App() {
       position: bulletPosition,
       starting: Date.now(),
       angle,
+      hasHit:false,
       timestamp: Date.now(),
     };
   
@@ -163,7 +175,7 @@ function events(key) {
         <ambientLight intensity={0.5} />
         <directionalLight position={[25, 18, -25]} intensity={0.3} />
         <Suspense>
-          <Physics gravity={[0, -9.82*2, 0]} >
+          <Physics gravity={[0, -9.82*2, 0]} debug>
             
             <Map />
             {Object.entries(players).map(([id, state]) => (
@@ -180,6 +192,7 @@ function events(key) {
                 death = {death}
                 login={firstlogin}
                 setloginfalse={setloginfalse}
+               
               />
             ))}
             
@@ -190,9 +203,6 @@ function events(key) {
                  socket={socket}
                  playerId={playerId}
                  bullet={bullet}
-                 decreasehealth={decreasehealth}
-                 oncollision = {oncollision}
-                 endcollision = {endcollision}
                  
                />
              ))}
@@ -231,12 +241,3 @@ function events(key) {
 
 
 export default App;
-
-
-
-
-
-
-
-
-
