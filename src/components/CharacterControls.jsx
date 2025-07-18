@@ -1,5 +1,3 @@
-
-
 import { RigidBody, CapsuleCollider } from "@react-three/rapier";  
 import { Billboard, CameraControls, Text } from "@react-three/drei";
 import { useRef, useState, useEffect } from "react";
@@ -47,7 +45,7 @@ function CharacterControls({
   });
   const [animation, setAnimation] = useState(initialState.animation || "Idle");
   const [isJumping, setIsJumping] = useState(false);
-  const [health, sethealth] = useState(initialState.health || 100);
+  const [health, sethealth] = useState(initialState.health ||100);
   const lastShoot = useRef(0);
   const [zoom, setzoom] = useState(false);
 
@@ -188,7 +186,7 @@ function CharacterControls({
     }
 
     // Handle hit and death.
-    if (isUserPlayer && hit) {
+   if (isUserPlayer&& hit ) {
       if (death) {
         setAnimation("Death");
         sethealth(initialState.health);
@@ -239,7 +237,7 @@ function CharacterControls({
         colliders={false}
         linearDamping={5}
         type="dynamic"
-        userData={{ type: "player", playerId }}
+        userData={{ type: "player",playerId:soldierid }}
       >
         <PlayerInfo
           soldiername={isUserPlayer ? playername : initialState.name}
