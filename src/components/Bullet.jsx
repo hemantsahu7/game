@@ -1,18 +1,13 @@
 
-
 import { RigidBody } from "@react-three/rapier";
 import { useEffect, useMemo, useRef } from "react";
-/*import { useLoader } from "@react-three/fiber";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
-import { SkeletonUtils } from "three-stdlib";*/
 import { useFrame } from "@react-three/fiber";
 import { MeshBasicMaterial, } from "three";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { CuboidCollider } from "@react-three/rapier";
 
 
-
-const BULLET_SPEED = 15;
+const BULLET_SPEED = 25;
 
 const bulletMaterial = new MeshBasicMaterial({
   color: "hotpink",
@@ -22,14 +17,11 @@ const bulletMaterial = new MeshBasicMaterial({
 
 bulletMaterial.color.multiplyScalar(42);
 
-export function Bullet({ socket, playerId, bullet, decreasehealth, oncollision, endcollision }) {
+export function Bullet({ socket, playerId, bullet }) {
   const rigidbody = useRef();
   const group = useRef();
 
-  // Load the .obj bullet model
- /*const model = useLoader(OBJLoader, "/bullet.obj"); // Replace with your actual path
  
- const clonedModel = useMemo(() => SkeletonUtils.clone(model), [model]);*/
  
 
   useEffect(() => {
@@ -58,8 +50,8 @@ export function Bullet({ socket, playerId, bullet, decreasehealth, oncollision, 
   useFrame(() => {
     // Emit bullet position updates only for the player who fired it
     if (bullet.playerId === playerId && rigidbody.current) {
-      const timeAlive = Date.now() - bullet.starting;
-      if(bullet.position.x>500 || bullet.position.x <-500 || bullet.position.z>500 || bullet.position.z<-500|| timeAlive>3000){
+      const timeAlive = Date.now() - bullet.starting; // milliseconds
+      if(bullet.position.x>500 || bullet.position.x <-500 || bullet.position.z>500 || bullet.position.z<-500 || timeAlive>3000){
         socket.emit("removeBullet", bullet.id);
       }
       else{
@@ -76,15 +68,7 @@ export function Bullet({ socket, playerId, bullet, decreasehealth, oncollision, 
     }
   });
 
-  /*useEffect(() => {
-    // Apply shadows to all meshes in the cloned model
-    clonedModel.traverse((child) => {
-      if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    });
-  }, [clonedModel]);*/
+ 
 
   return (
     <group rotation-y={bullet.angle} ref={group}>
@@ -95,17 +79,25 @@ export function Bullet({ socket, playerId, bullet, decreasehealth, oncollision, 
         ccd = {true}
         onIntersectionEnter={(e) => {
           console.log("collision happened");
+          console.log("bullet touch collider of player");
           if (!e.other.rigidBody.userData) {
             socket.emit("removeBullet", bullet.id);
           }
           if (
             e.other.rigidBody.userData?.type === "player" &&
-            e.other.rigidBody.userData?.playerId !== bullet.playerId
+            e.other.rigidBody.userData?.playerId !== bullet.playerId && bullet.hasHit===false
           ) {
+            if (rigidbody.current) {
+                rigidbody.current.setEnabled(false);
+                console.log("collider of bullet is removed"); // Disables further physics/collisions
+              }
+              bullet.hasHit = true;
+            console.log("target is player");
             socket.emit("removeBullet", bullet.id);
-            decreasehealth(e.other.rigidBody.userData.playerId);
-            oncollision();
-            endcollision();
+            socket.emit("playerHit",{hitPlayerId:e.other.rigidBody.userData.playerId})
+            // Optional: disable collider to prevent multiple hits (prevent future collisions)
+             
+            
           } 
         }}
         userData={{
@@ -113,8 +105,9 @@ export function Bullet({ socket, playerId, bullet, decreasehealth, oncollision, 
           id: bullet.id,
           shooterid: bullet.playerId,
         }}
-      >  
-        <CuboidCollider args={[0.2, 0.2, 1]} position={[0, 0, 0.25]} />
+      >
+       <CuboidCollider args={[0.2, 0.2, 1]} position={[0, 0, 0.25]} />
+
         <mesh position-z={0.25} material={bulletMaterial}>
             <boxGeometry args={[0.05, 0.05, 0.3]} />
         </mesh>
@@ -126,16 +119,6 @@ export function Bullet({ socket, playerId, bullet, decreasehealth, oncollision, 
   );
 }
 export default Bullet;
-
-
-//<primitive object={clonedModel} scale={[0.001, 0.001, 0.0012]} position={[0, 0, 0.25]} />
-/*<EffectComposer disableNormalPass>
-          <Bloom luminanceThreshold={0.7} 
-                 luminanceSmoothing={0.2} 
-                 intensity={0.5} 
-                 mipmapBlur 
-                />
-      </EffectComposer>*/
 
 
 
