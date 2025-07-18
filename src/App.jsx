@@ -175,7 +175,7 @@ function events(key) {
         <ambientLight intensity={0.5} />
         <directionalLight position={[25, 18, -25]} intensity={0.3} />
         <Suspense>
-          <Physics gravity={[0, -9.82*2, 0]} debug>
+          <Physics gravity={[0, -9.82*2, 0]}>
             
             <Map />
             {Object.entries(players).map(([id, state]) => (
